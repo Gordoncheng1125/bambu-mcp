@@ -406,6 +406,7 @@ const MQTT_PORT = parseInt(process.env.BAMBU_LAB_MQTT_PORT || "8883");
 const MQTT_USERNAME = process.env.BAMBU_LAB_MQTT_USERNAME || "bblp";
 const MQTT_PASSWORD = process.env.BAMBU_LAB_MQTT_PASSWORD || "";
 const MQTT_DEVICE_ID = process.env.BAMBU_LAB_DEVICE_ID || "";
+const USER_ID = process.env.BAMBU_LAB_USER_ID || "";
 
 // ===== Helpers =====
 
@@ -447,7 +448,7 @@ class BambuLabMCP {
     };
 
     this.server = new Server(
-      { name: "bambu-lab-mcp", version: "3.1.0" },
+      { name: "bambu-lab-mcp", version: "3.2.0" },
       { capabilities: { tools: {}, logging: {} } },
     );
 
@@ -458,17 +459,25 @@ class BambuLabMCP {
   private async initMQTT() {
     if (MQTT_HOST && MQTT_PASSWORD && MQTT_DEVICE_ID) {
       try {
+        const appCert = getAppCert();
         const config: MQTTConfig = {
           host: MQTT_HOST,
           port: MQTT_PORT,
           username: MQTT_USERNAME,
           password: MQTT_PASSWORD,
           deviceId: MQTT_DEVICE_ID,
+          privateKey: appCert.privateKey,
+          certId: APP_CERT_ID,
+          userId: USER_ID || undefined,
         };
 
         this.mqttClient = new BambuMQTTClient(config);
         await this.mqttClient.connect();
-        console.error("[bambu-mcp] MQTT connected to", MQTT_HOST);
+        console.error(
+          "[bambu-mcp] MQTT connected to",
+          MQTT_HOST,
+          "(commands signed)",
+        );
       } catch (error: any) {
         console.error("[bambu-mcp] MQTT connection failed:", error.message);
       }
@@ -1238,19 +1247,23 @@ class BambuLabMCP {
     password: string;
     device_id: string;
   }) {
+    const appCert = getAppCert();
     const config: MQTTConfig = {
       host: args.host,
       port: args.port || 8883,
       username: args.username || "bblp",
       password: args.password,
       deviceId: args.device_id,
+      privateKey: appCert.privateKey,
+      certId: this.config.appCertId,
+      userId: USER_ID || undefined,
     };
 
     this.mqttClient = new BambuMQTTClient(config);
     await this.mqttClient.connect();
 
     return ok({
-      message: "Connected to printer via MQTT",
+      message: "Connected to printer via MQTT (commands signed)",
       host: args.host,
       device_id: args.device_id,
     });

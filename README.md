@@ -182,17 +182,19 @@ Bambu Lab Printer (P1P/P1S/X1C/A1)
 
 ### Environment Variables
 
-| Variable                  | Required  | Description                             |
-| ------------------------- | --------- | --------------------------------------- |
-| `BAMBU_LAB_MQTT_HOST`     | For MQTT  | Printer IP address                      |
-| `BAMBU_LAB_MQTT_PASSWORD` | For MQTT  | LAN access code                         |
-| `BAMBU_LAB_DEVICE_ID`     | For MQTT  | Printer serial number                   |
-| `BAMBU_LAB_MQTT_PORT`     | No        | MQTT port (default: 8883)               |
-| `BAMBU_LAB_MQTT_USERNAME` | No        | MQTT username (default: bblp)           |
-| `BAMBU_LAB_COOKIES`       | For cloud | Session cookies for cloud API           |
-| `BAMBU_LAB_BASE_URL`      | No        | Cloud API base URL                      |
-| `BAMBU_APP_PRIVATE_KEY`   | No        | Override the built-in X.509 private key |
-| `BAMBU_APP_CERTIFICATE`   | No        | Override the built-in X.509 certificate |
+| Variable                  | Required  | Description                                          |
+| ------------------------- | --------- | ---------------------------------------------------- |
+| `BAMBU_LAB_MQTT_HOST`     | For MQTT  | Printer IP address                                   |
+| `BAMBU_LAB_MQTT_PASSWORD` | For MQTT  | LAN access code                                      |
+| `BAMBU_LAB_DEVICE_ID`     | For MQTT  | Printer serial number                                |
+| `BAMBU_LAB_MQTT_PORT`     | No        | MQTT port (default: 8883)                            |
+| `BAMBU_LAB_MQTT_USERNAME` | No        | MQTT username (default: bblp)                        |
+| `BAMBU_LAB_COOKIES`       | For cloud | Session cookies for cloud API                        |
+| `BAMBU_LAB_BASE_URL`      | No        | Cloud API base URL                                   |
+| `BAMBU_LAB_USER_ID`       | No        | Bambu Lab numeric user ID (for signed MQTT commands) |
+| `BAMBU_LAB_APP_CERT_ID`   | No        | Override the built-in X.509 cert ID                  |
+| `BAMBU_APP_PRIVATE_KEY`   | No        | Override the built-in X.509 private key              |
+| `BAMBU_APP_CERTIFICATE`   | No        | Override the built-in X.509 certificate              |
 
 ### Finding Your Printer Info
 
@@ -206,7 +208,9 @@ Bambu Lab Printer (P1P/P1S/X1C/A1)
 
 This server includes the publicly extracted X.509 certificate from the Bambu Connect desktop application. This is not a secret — it was [publicly disclosed in January 2025](https://hackaday.com/2025/01/19/bambu-connects-authentication-x-509-certificate-and-private-key-extracted/) and is embedded in every copy of Bambu Connect.
 
-The certificate can be overridden via `BAMBU_APP_PRIVATE_KEY` and `BAMBU_APP_CERTIFICATE` environment variables if Bambu Lab rotates credentials.
+All MQTT commands are now **automatically signed** with RSA-SHA256 using this certificate. This is required by post-January 2025 firmware — unsigned commands are rejected with error `84033543`. No Developer Mode required for basic commands (stop, pause, resume, speed, G-code).
+
+The certificate can be overridden via `BAMBU_APP_PRIVATE_KEY` and `BAMBU_APP_CERTIFICATE` environment variables if Bambu Lab rotates credentials. Set `BAMBU_LAB_USER_ID` (your numeric Bambu Lab user ID) for full compatibility — find it via the cloud API's `/v1/design-user-service/my/preference` endpoint.
 
 ### Safety Features
 
